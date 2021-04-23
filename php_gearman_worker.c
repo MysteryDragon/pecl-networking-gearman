@@ -594,7 +594,11 @@ PHP_FUNCTION(gearman_worker_add_function) {
 
         // Additional data passed along to the callback function
         if (zdata) {
-                ZVAL_COPY(&worker_cb->zdata,zdata);
+                if (Z_ISREF_P(zdata)) {
+                    ZVAL_COPY(&worker_cb->zdata, zdata);
+                } else {
+                    ZVAL_NEW_REF(&worker_cb->zdata, zdata);
+                }
         } else {
                 ZVAL_NULL(&worker_cb->zdata);
         }
