@@ -703,7 +703,11 @@ static void gearman_client_add_task_handler(gearman_task_st* (*add_task_func)(
         task = Z_GEARMAN_TASK_P(return_value);
 
         if (zdata) {
+            if (Z_ISREF_P(zdata)) {
                 ZVAL_COPY(&task->zdata, zdata);
+            } else {
+                ZVAL_NEW_REF(&task->zdata, zdata);
+            }
         }
 
         ZVAL_COPY(&task->zworkload, zworkload);
