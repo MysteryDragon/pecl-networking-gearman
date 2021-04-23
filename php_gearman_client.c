@@ -835,7 +835,11 @@ PHP_FUNCTION(gearman_client_add_task_status) {
            task = Z_GEARMAN_TASK_P(return_value);
 
         if (zdata) {
-                   ZVAL_COPY(&task->zdata, zdata);
+            if (Z_ISREF_P(zdata)) {
+                ZVAL_COPY(&task->zdata, zdata);
+            } else {
+                ZVAL_NEW_REF(&task->zdata, zdata);
+            }
         }
         /* need to store a ref to the client for later access to cb's */
         ZVAL_COPY(&task->zclient, zobj);
