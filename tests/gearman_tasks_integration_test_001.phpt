@@ -12,6 +12,9 @@ require_once('connect.inc');
 print "Start" . PHP_EOL;
 
 $job_name = uniqid();
+$job_name_for_context = uniqid();
+
+$counter = 0;
 
 $pid = pcntl_fork();
 if ($pid == -1) {
@@ -29,12 +32,35 @@ if ($pid == -1) {
         ),
         true
     ) . PHP_EOL;
+    print "addFunction (for context): " . var_export(
+        $worker->addFunction(
+            $job_name_for_context,
+            function($job, &$context) {
+                $context++;
+                // We won't receive $context by reference, and there it will be always 1
+                print "context: " . var_export($context, true) . PHP_EOL;
+            }
+        ),
+        true
+    ) . PHP_EOL;
 
-    for ($i = 0; $i < 6; $i++) {
+    if (defined('PHP_VERSION_ID') && PHP_VERSION_ID >= 80000) {
+        // Worker function for context testing will throw warning about $context that must be passed
+        // by reference instead of by value
+        $error_reporting_value = ini_get('error_reporting');
+        ini_set('error_reporting', $error_reporting_value & ~E_WARNING);
+    }
+
+    for ($i = 0; $i < 12; $i++) {
         $worker->work();
     }
 
+    if (defined('PHP_VERSION_ID') && PHP_VERSION_ID >= 80000) {
+        ini_set('error_reporting', $error_reporting_value);
+    }
+
     print "unregister: " . var_export($worker->unregister($job_name), true) . PHP_EOL;
+    print "unregister (for context): " . var_export($worker->unregister($job_name_for_context), true) . PHP_EOL;
 
     // Wait for child
     $exit_status = 0;
@@ -57,6 +83,12 @@ if ($pid == -1) {
     $tasks[] = $client->addTaskHighBackground($job_name, 2.0);
     $tasks[] = $client->addTaskLow($job_name, "low");
     $tasks[] = $client->addTaskLowBackground($job_name, true);
+    $tasks[] = $client->addTask($job_name_for_context, "test", $counter);
+    $tasks[] = $client->addTaskBackground($job_name_for_context, "test", $counter);
+    $tasks[] = $client->addTaskHigh($job_name_for_context, "test", $counter);
+    $tasks[] = $client->addTaskHighBackground($job_name_for_context, "test", $counter);
+    $tasks[] = $client->addTaskLow($job_name_for_context, "test", $counter);
+    $tasks[] = $client->addTaskLowBackground($job_name_for_context, "test", $counter);
     $client->runTasks();
     if ($client->returnCode() != GEARMAN_SUCCESS) {
         exit(2); // error
@@ -69,11 +101,19 @@ print "Done";
 Start
 addServer: true
 addFunction: true
+addFunction (for context): true
 workload: '2'
 workload: '1'
 workload: 'normalbg'
 workload: 'normal'
 workload: '1'
 workload: 'low'
+context: 1
+context: 1
+context: 1
+context: 1
+context: 1
+context: 1
 unregister: true
+unregister (for context): true
 Done
