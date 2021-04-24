@@ -44,19 +44,8 @@ if ($pid == -1) {
         true
     ) . PHP_EOL;
 
-    if (defined('PHP_VERSION_ID') && PHP_VERSION_ID >= 80000) {
-        // Worker function for context testing will throw warning about $context that must be passed
-        // by reference instead of by value
-        $error_reporting_value = ini_get('error_reporting');
-        ini_set('error_reporting', $error_reporting_value & ~E_WARNING);
-    }
-
     for ($i = 0; $i < 12; $i++) {
         $worker->work();
-    }
-
-    if (defined('PHP_VERSION_ID') && PHP_VERSION_ID >= 80000) {
-        ini_set('error_reporting', $error_reporting_value);
     }
 
     print "unregister: " . var_export($worker->unregister($job_name), true) . PHP_EOL;
