@@ -355,7 +355,7 @@ class GearmanWorker {
     public function grabJob(): GearmanWorker|false {}
 
     /** @alias gearman_worker_add_function */
-    public function addFunction(string $function_name, callable $function, ?mixed $context = null, int $timeout = 0): bool {}
+    public function addFunction(string $function_name, callable $function, ?mixed &$context = null, int $timeout = 0): bool {}
 
     /** @alias gearman_worker_work */
     public function work(): bool {}
@@ -381,7 +381,7 @@ function gearman_worker_register(GearmanWorker $obj, string $function_name, int 
 function gearman_worker_unregister(GearmanWorker $obj, string $function_name): bool {}
 function gearman_worker_unregister_all(GearmanWorker $obj): bool {}
 function gearman_worker_grab_job(GearmanWorker $obj): GearmanWorker|false {}
-function gearman_worker_add_function(GearmanWorker $obj, string $function_name, callable $function, ?mixed $context = null, int $timeout = 0): bool {}
+function gearman_worker_add_function(GearmanWorker $obj, string $function_name, callable $function, ?mixed &$context = null, int $timeout = 0): bool {}
 function gearman_worker_work(GearmanWorker $obj): bool {}
 function gearman_worker_ping(GearmanWorker $obj, string $data): bool {}
 
